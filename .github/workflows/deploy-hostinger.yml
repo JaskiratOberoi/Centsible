@@ -9,20 +9,21 @@ on:
   workflow_dispatch:
 
 env:
+  # hanseibydesign.com hosting server; the FTP account (see repo secrets) is
+  # scoped directly to domains/hanseibydesign.com/public_html/spends, so files
+  # upload to the account root
   FTP_SERVER: 46.28.45.60
-  # FTP root is usually public_html — "spends" lands files in public_html/spends,
-  # the document root of spends.hanseibydesign.com
-  FTP_SERVER_DIR: spends
+  FTP_SERVER_DIR: ./
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"

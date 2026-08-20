@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
 import { isoDay, daysAgo, uid, computeInsights, DEFAULT_CATEGORIES } from './utils.js'
 
-const KEY = 'centsible-v2' // v1 was USD-denominated; fresh seed for INR
+const LEGACY_KEY = 'centsible-v2' // pre-accounts store; adopted by the first user
+const keyFor = (userId) => `centsible-v2:${userId}`
 
 const DEFAULT_METHODS = [
   { id: 'card-sapphire', label: 'Sapphire Visa', kind: 'credit', last4: '4421', color: '#1c5cab' },
@@ -49,10 +50,12 @@ function seedExpenses() {
   return out
 }
 
-function initialState() {
+function initialState(key) {
   try {
-    const raw = localStorage.getItem(KEY)
+    // adopt data saved before accounts existed, so nothing is lost on upgrade
+    const raw = localStorage.getItem(key) ?? localStorage.getItem(LEGACY_KEY)
     if (raw) {
+      localStorage.removeItem(LEGACY_KEY)
       const s = JSON.parse(raw)
       // older saves may predate custom categories
       if (!s.categories) s.categories = DEFAULT_CATEGORIES
@@ -98,12 +101,13 @@ function reducer(state, action) {
 
 const StoreCtx = createContext(null)
 
-export function StoreProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, undefined, initialState)
+export function StoreProvider({ userId, children }) {
+  // remounted per user (key={userId} at the call site), so lazy init is safe
+  const [state, dispatch] = useReducer(reducer, keyFor(userId), initialState)
 
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(state))
-  }, [state])
+    localStorage.setItem(keyFor(userId), JSON.stringify(state))
+  }, [state, userId])
 
   const insights = useMemo(
     () => computeInsights(state.expenses, state.monthlyBudget),

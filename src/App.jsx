@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { StoreProvider } from './store.jsx'
+import { AuthProvider, useAuth } from './auth.jsx'
+import AuthScreen from './components/AuthScreen.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import AddExpense from './components/AddExpense.jsx'
 import Analytics from './components/Analytics.jsx'
@@ -8,11 +10,11 @@ import Expenses from './components/Expenses.jsx'
 import Wallet from './components/Wallet.jsx'
 
 const TABS = [
-  { id: 'home', label: 'Overview' },
-  { id: 'add', label: 'Add' },
-  { id: 'expenses', label: 'Expenses' },
-  { id: 'analytics', label: 'Analytics' },
-  { id: 'wallet', label: 'Wallet' },
+  { id: 'home', label: 'Overview', icon: '🪙' },
+  { id: 'add', label: 'Add', icon: '➕' },
+  { id: 'expenses', label: 'Expenses', icon: '📒' },
+  { id: 'analytics', label: 'Analytics', icon: '📊' },
+  { id: 'wallet', label: 'Wallet', icon: '💳' },
 ]
 
 function Aurora() {
@@ -40,26 +42,38 @@ function Aurora() {
   )
 }
 
-export default function App() {
+function Shell() {
+  const { user, ready, logout } = useAuth()
   const [tab, setTab] = useState(() => {
     const h = window.location.hash.slice(1)
     return TABS.some((t) => t.id === h) ? h : 'home'
   })
 
   useEffect(() => {
-    window.history.replaceState(null, '', tab === 'home' ? '#' : `#${tab}`)
-  }, [tab])
+    if (user) window.history.replaceState(null, '', tab === 'home' ? '#' : `#${tab}`)
+  }, [tab, user])
+
+  if (!ready) return null
+
+  if (!user) {
+    return (
+      <motion.div key="auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <AuthScreen />
+      </motion.div>
+    )
+  }
+
+  const firstName = user.name.split(' ')[0]
 
   return (
-    <StoreProvider>
-      <Aurora />
+    <StoreProvider key={user.id} userId={user.id}>
       <div className="shell">
         <header className="topbar">
           <div className="brand">
             <span className="coin-dot">¢</span>
             Cent<em>sible</em>
           </div>
-          <nav className="nav">
+          <nav className="nav desktop-nav">
             {TABS.map((t) => (
               <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>
                 {tab === t.id && (
@@ -72,6 +86,11 @@ export default function App() {
               </button>
             ))}
           </nav>
+          <div className="user-chip">
+            <span className="user-avatar" title={user.email}>{firstName[0]?.toUpperCase()}</span>
+            <span className="user-name">{firstName}</span>
+            <button className="user-logout" onClick={logout} title="Sign out">⏻</button>
+          </div>
         </header>
 
         <AnimatePresence mode="wait">
@@ -90,6 +109,24 @@ export default function App() {
           </motion.main>
         </AnimatePresence>
       </div>
+
+      <nav className="bottomnav">
+        {TABS.map((t) => (
+          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>
+            <span className="bn-icon">{t.icon}</span>
+            <span className="bn-label">{t.label}</span>
+          </button>
+        ))}
+      </nav>
     </StoreProvider>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Aurora />
+      <Shell />
+    </AuthProvider>
   )
 }

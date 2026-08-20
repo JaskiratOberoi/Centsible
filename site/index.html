@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hansei by Design — a studio built on reflection</title>
+  <meta name="description" content="Hansei by Design is a freelance design studio crafting thoughtful digital products — design systems, interfaces, motion and code, refined through reflection." />
+  <meta name="theme-color" content="#0b0908" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏮</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Noto+Serif+JP:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="embers" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="nav" id="top">
+    <a class="nav-brand" href="#top">Hansei <span>by</span> Design</a>
+    <nav class="nav-links">
+      <a href="#philosophy">Philosophy</a>
+      <a href="#services">Services</a>
+      <a href="#process">Process</a>
+      <a class="nav-cta" href="mailto:jso101196@gmail.com?subject=Project%20enquiry%20—%20Hansei%20by%20Design">Start a project</a>
+    </nav>
+    <button class="nav-burger" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+  </header>
+
+  <main>
+    <!-- ═══════════ HERO ═══════════ -->
+    <section class="hero">
+      <div class="hero-kanji" aria-hidden="true" data-parallax="0.25">反省</div>
+      <div class="lantern l1" aria-hidden="true"></div>
+      <div class="lantern l2" aria-hidden="true"></div>
+      <div class="lantern l3" aria-hidden="true"></div>
+
+      <p class="hero-eyebrow reveal">design studio · digital craft</p>
+      <h1 class="hero-title reveal d1">Hansei <em>by</em> Design</h1>
+      <p class="hero-jp reveal d2" lang="ja">反省 バイ 設計</p>
+      <p class="hero-tag reveal d3">
+        A studio built on <b>reflection</b> — we design, we question,
+        we refine, until it feels inevitable.
+      </p>
+      <div class="hero-actions reveal d4">
+        <a class="btn btn-solid" href="mailto:jso101196@gmail.com?subject=Project%20enquiry%20—%20Hansei%20by%20Design">Start a project</a>
+        <a class="btn btn-ghost" href="#philosophy">Why “Hansei”?</a>
+      </div>
+
+      <a class="scroll-hint" href="#philosophy" aria-label="Scroll down">
+        <span></span>
+      </a>
+    </section>
+
+    <!-- ═══════════ MARQUEE ═══════════ -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>Product Design</span><i>◦</i><span>Design Systems</span><i>◦</i>
+        <span>Web Development</span><i>◦</i><span>Motion &amp; Interaction</span><i>◦</i>
+        <span>Brand Identity</span><i>◦</i><span>Design Engineering</span><i>◦</i>
+        <span>Product Design</span><i>◦</i><span>Design Systems</span><i>◦</i>
+        <span>Web Development</span><i>◦</i><span>Motion &amp; Interaction</span><i>◦</i>
+        <span>Brand Identity</span><i>◦</i><span>Design Engineering</span><i>◦</i>
+      </div>
+    </div>
+
+    <!-- ═══════════ PHILOSOPHY ═══════════ -->
+    <section class="section philosophy" id="philosophy">
+      <div class="section-kanji" aria-hidden="true" data-parallax="0.15">省</div>
+      <p class="section-eyebrow reveal">哲学 · philosophy</p>
+      <h2 class="section-title reveal">What is <em>hansei</em>?</h2>
+      <div class="philosophy-grid">
+        <div class="philosophy-copy reveal d1">
+          <p>
+            <b lang="ja">反省</b> — <i>hansei</i> — is the Japanese practice of honest
+            self-reflection. After every effort, you pause: what worked, what didn’t,
+            what could be better — even when everything went right.
+          </p>
+          <p>
+            We build that pause into the way we design. Every screen, system and
+            interaction ships only after it has been questioned, stripped back and
+            refined. The result is work that feels calm, intentional and effortless —
+            because everything unnecessary has been reflected away.
+          </p>
+        </div>
+        <blockquote class="philosophy-quote reveal d2">
+          “Design is not done when there is nothing left to add,<br />
+          but when there is nothing left to question.”
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- ═══════════ SERVICES ═══════════ -->
+    <section class="section services" id="services">
+      <p class="section-eyebrow reveal">仕事 · what we do</p>
+      <h2 class="section-title reveal">Services</h2>
+      <div class="services-grid">
+        <article class="service-card reveal">
+          <div class="service-icon">◈</div>
+          <h3>Product &amp; UX Design</h3>
+          <p>From first sketch to final polish — interfaces that are honest, humane and quietly beautiful.</p>
+        </article>
+        <article class="service-card reveal d1">
+          <div class="service-icon">⬒</div>
+          <h3>Design Systems</h3>
+          <p>Tokens, components and documentation that let teams ship consistently, at speed, without drift.</p>
+        </article>
+        <article class="service-card reveal d2">
+          <div class="service-icon">⟨/⟩</div>
+          <h3>Web Development</h3>
+          <p>Fast, accessible, hand-crafted front-ends — the design intent survives all the way to production.</p>
+        </article>
+        <article class="service-card reveal">
+          <div class="service-icon">↝</div>
+          <h3>Motion &amp; Interaction</h3>
+          <p>Micro-interactions and motion language that make products feel alive — never decorated, always meant.</p>
+        </article>
+        <article class="service-card reveal d1">
+          <div class="service-icon">◯</div>
+          <h3>Brand &amp; Identity</h3>
+          <p>Naming, wordmarks and visual language with a point of view — built to stay recognisable.</p>
+        </article>
+        <article class="service-card reveal d2">
+          <div class="service-icon">⚙</div>
+          <h3>Design Engineering</h3>
+          <p>The bridge discipline: prototypes, tooling and handoff that make designers and engineers faster together.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ═══════════ PROCESS ═══════════ -->
+    <section class="section process" id="process">
+      <div class="section-kanji" aria-hidden="true" data-parallax="0.15">道</div>
+      <p class="section-eyebrow reveal">道 · the way we work</p>
+      <h2 class="section-title reveal">Process</h2>
+      <ol class="process-steps">
+        <li class="reveal">
+          <span class="step-kanji" lang="ja">観</span>
+          <h3>Observe</h3>
+          <p>We start by listening — to you, your users and your constraints. No pixels until the problem is sharp.</p>
+        </li>
+        <li class="reveal d1">
+          <span class="step-kanji" lang="ja">作</span>
+          <h3>Craft</h3>
+          <p>Design and build move together in short, visible loops — you see real progress, not decks.</p>
+        </li>
+        <li class="reveal d2">
+          <span class="step-kanji" lang="ja">省</span>
+          <h3>Reflect</h3>
+          <p>The hansei step. We critique our own work harder than anyone else will, and cut what doesn’t earn its place.</p>
+        </li>
+        <li class="reveal d3">
+          <span class="step-kanji" lang="ja">磨</span>
+          <h3>Polish</h3>
+          <p>Motion, accessibility, performance, detail. The last 10% is the part people feel but never notice.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ═══════════ CONTACT ═══════════ -->
+    <section class="section contact" id="contact">
+      <div class="lantern l4" aria-hidden="true"></div>
+      <h2 class="contact-title reveal">Let’s make something<br /><em>worth reflecting on.</em></h2>
+      <p class="contact-sub reveal d1">Currently taking on select freelance projects.</p>
+      <a class="btn btn-solid btn-big reveal d2" href="mailto:jso101196@gmail.com?subject=Project%20enquiry%20—%20Hansei%20by%20Design">
+        hello → start a project
+      </a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span class="footer-brand">Hansei <i>by</i> Design</span>
+    <span lang="ja">反省 バイ 設計</span>
+    <span>© 2026 · crafted with reflection</span>
+  </footer>
+
+  <script src="main.js" defer></script>
+</body>
+</html>

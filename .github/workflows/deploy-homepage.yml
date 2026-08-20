@@ -29,3 +29,4 @@ jobs:
           server-dir: ${{ env.FTP_SERVER_DIR }}
           local-dir: ./site/
           state-name: .ftp-deploy-homepage-state.json
+          timeout: 120000

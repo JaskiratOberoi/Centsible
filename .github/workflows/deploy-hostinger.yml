@@ -9,11 +9,11 @@ on:
   workflow_dispatch:
 
 env:
-  # hanseibydesign.com hosting server; the FTP account (see repo secrets) is
-  # scoped directly to domains/hanseibydesign.com/public_html/spends, so files
-  # upload to the account root
+  # hanseibydesign.com FTP (hPanel → Files → FTP Accounts): the account
+  # u716933352.hanseibydesign.com has its root at public_html, so "spends/"
+  # lands in public_html/spends — the document root of spends.hanseibydesign.com
   FTP_SERVER: 46.28.45.60
-  FTP_SERVER_DIR: ./
+  FTP_SERVER_DIR: spends/
 
 jobs:
   deploy:

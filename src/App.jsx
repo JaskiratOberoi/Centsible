@@ -4,11 +4,13 @@ import { StoreProvider } from './store.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import AddExpense from './components/AddExpense.jsx'
 import Analytics from './components/Analytics.jsx'
+import Expenses from './components/Expenses.jsx'
 import Wallet from './components/Wallet.jsx'
 
 const TABS = [
   { id: 'home', label: 'Overview' },
   { id: 'add', label: 'Add' },
+  { id: 'expenses', label: 'Expenses' },
   { id: 'analytics', label: 'Analytics' },
   { id: 'wallet', label: 'Wallet' },
 ]
@@ -82,6 +84,7 @@ export default function App() {
           >
             {tab === 'home' && <Dashboard goTo={setTab} />}
             {tab === 'add' && <AddExpense goTo={setTab} />}
+            {tab === 'expenses' && <Expenses />}
             {tab === 'analytics' && <Analytics />}
             {tab === 'wallet' && <Wallet />}
           </motion.main>

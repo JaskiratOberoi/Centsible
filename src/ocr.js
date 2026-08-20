@@ -13,13 +13,22 @@ function getWorker(onProgress) {
   return workerPromise
 }
 
-const MONEY = /(?:[$€£₹]\s*)?(\d{1,3}(?:,\d{3})*|\d+)\.(\d{2})\b/g
+const MONEY = /(?:[$€£₹]|rs\.?|inr)?\s*(\d{1,3}(?:,\d{2,3})*|\d+)\.(\d{2})\b/gi
+// Indian receipts often print whole-rupee amounts with no decimals — accept
+// them when prefixed with a currency marker (₹ / Rs / INR)
+const MONEY_INT = /(?:[₹]|rs\.?|inr)\s*(\d{1,3}(?:,\d{2,3})*|\d+)\b(?!\.\d)/gi
 
-function moniesIn(line) {
+function moniesIn(line, allowBareInts = false) {
   const out = []
   let m
   MONEY.lastIndex = 0
   while ((m = MONEY.exec(line))) out.push(parseFloat(`${m[1].replace(/,/g, '')}.${m[2]}`))
+  MONEY_INT.lastIndex = 0
+  while ((m = MONEY_INT.exec(line))) out.push(parseInt(m[1].replace(/,/g, ''), 10))
+  if (!out.length && allowBareInts) {
+    const bare = line.match(/(?:^|\s)(\d{1,3}(?:,\d{2,3})*|\d{1,6})(?:\s|$)/)
+    if (bare) out.push(parseInt(bare[1].replace(/,/g, ''), 10))
+  }
   return out
 }
 
@@ -57,7 +66,7 @@ function parsePayment(text) {
   if (/\bdebit\b/.test(lower)) kind = 'debit'
   else if (/\bcredit\b/.test(lower) || network) kind = 'credit'
   else if (/\bcash\b/.test(lower)) kind = 'cash'
-  else if (/\bupi\b|apple pay|google pay|\bgpay\b/i.test(text)) kind = 'wallet'
+  else if (/\bupi\b|apple pay|google pay|\bgpay\b|paytm|phonepe|bhim/i.test(text)) kind = 'wallet'
   if (!network && !kind && !last4) return null
   return { network, kind, last4 }
 }
@@ -71,7 +80,8 @@ export function parseReceiptText(text) {
   let total = null
   for (const line of lines) {
     if (TOTAL_WORDS.test(line) && !NOT_TOTAL.test(line)) {
-      const vals = moniesIn(line)
+      // on an explicit total line, accept whole-rupee amounts with no ₹ marker
+      const vals = moniesIn(line, true)
       if (vals.length) total = Math.max(total ?? 0, ...vals)
     }
   }

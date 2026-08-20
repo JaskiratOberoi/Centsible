@@ -1,17 +1,17 @@
 import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store.jsx'
-import { CATEGORIES, isoDay, uid, fmtMoney } from '../utils.js'
+import { isoDay, uid, fmtMoney, CATEGORY_COLORS } from '../utils.js'
 import { scanReceipt } from '../ocr.js'
 
 function guessCategory(merchant = '') {
   const m = merchant.toLowerCase()
-  if (/market|grocer|mart|foods|trader|aldi|kroger|safeway/.test(m)) return 'groceries'
-  if (/cafe|coffee|pizza|grill|kitchen|restaurant|bar|diner|bakery|taco|sushi/.test(m)) return 'food'
-  if (/uber|lyft|shell|chevron|exxon|fuel|gas|parking|transit/.test(m)) return 'transport'
-  if (/pharmacy|cvs|walgreens|clinic|dental|gym|fitness/.test(m)) return 'health'
-  if (/cinema|theater|amc|spotify|netflix|arcade/.test(m)) return 'entertainment'
-  if (/electric|water|utility|internet|wireless|telecom/.test(m)) return 'bills'
+  if (/market|grocer|mart|foods|bazaar|kirana|bigbasket|blinkit|zepto/.test(m)) return 'groceries'
+  if (/cafe|coffee|pizza|grill|kitchen|restaurant|bar|diner|bakery|dhaba|swiggy|zomato|biryani/.test(m)) return 'food'
+  if (/uber|ola|rapido|shell|indian oil|bharat petroleum|hp petrol|fuel|gas|parking|metro|irctc/.test(m)) return 'transport'
+  if (/pharmacy|apollo|medplus|clinic|dental|gym|fitness|cult/.test(m)) return 'health'
+  if (/cinema|theater|pvr|inox|spotify|netflix|hotstar|arcade/.test(m)) return 'entertainment'
+  if (/electric|water|utility|internet|broadband|airtel|jio|vodafone|bsnl/.test(m)) return 'bills'
   return null
 }
 
@@ -19,17 +19,61 @@ function FoundPill({ ok, children }) {
   return <span className={`found-pill${ok ? '' : ' miss'}`}>{ok ? '✓' : '·'} {children}</span>
 }
 
+const METHOD_KINDS = [
+  { id: 'credit', label: 'Credit card' },
+  { id: 'debit', label: 'Debit card' },
+  { id: 'cash', label: 'Cash' },
+  { id: 'wallet', label: 'UPI / wallet' },
+]
+
 export default function AddExpense({ goTo }) {
-  const { methods, dispatch } = useStore()
+  const { methods, categories, dispatch } = useStore()
   const [form, setForm] = useState({
     amount: '', note: '', category: 'food', date: isoDay(), methodId: methods[0]?.id || '',
+    scope: 'personal',
   })
   const [scan, setScan] = useState(null) // {status, progress, result, previewUrl, error}
   const [saved, setSaved] = useState(false)
   const fileRef = useRef(null)
   const [dragOver, setDragOver] = useState(false)
+  const [newCat, setNewCat] = useState(null) // null | {emoji, label}
+  const [newMethod, setNewMethod] = useState(null) // null | {label, kind, last4}
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
+
+  function createCategory() {
+    const label = newCat.label.trim()
+    if (!label) return
+    const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || uid()
+    if (categories.some((c) => c.id === id)) {
+      set('category', id)
+      setNewCat(null)
+      return
+    }
+    const used = new Set(categories.map((c) => c.color))
+    const color = CATEGORY_COLORS.find((c) => !used.has(c)) || CATEGORY_COLORS[categories.length % CATEGORY_COLORS.length]
+    dispatch({ type: 'add-category', category: { id, label, emoji: newCat.emoji.trim() || '🏷️', color } })
+    set('category', id)
+    setNewCat(null)
+  }
+
+  function createMethod() {
+    const label = newMethod.label.trim()
+    if (!label) return
+    const id = uid()
+    dispatch({
+      type: 'add-method',
+      method: {
+        id,
+        label,
+        kind: newMethod.kind,
+        last4: /^\d{4}$/.test(newMethod.last4) ? newMethod.last4 : null,
+        color: CATEGORY_COLORS[(Math.random() * CATEGORY_COLORS.length) | 0],
+      },
+    })
+    set('methodId', id)
+    setNewMethod(null)
+  }
 
   async function handleFile(file) {
     if (!file || !file.type.startsWith('image/')) return
@@ -47,7 +91,7 @@ export default function AddExpense({ goTo }) {
         if (result.merchant) {
           next.note = result.merchant
           const cat = guessCategory(result.merchant)
-          if (cat) next.category = cat
+          if (cat && categories.some((c) => c.id === cat)) next.category = cat
         }
         if (result.payment) {
           const hit = methods.find(
@@ -77,6 +121,8 @@ export default function AddExpense({ goTo }) {
         category: form.category,
         date: form.date,
         methodId: form.methodId,
+        scope: form.scope,
+        reimbursed: form.scope === 'work' ? false : undefined,
       },
     })
     setSaved(true)
@@ -92,9 +138,9 @@ export default function AddExpense({ goTo }) {
         <div className="section-sub">Type it in, or let a receipt do the talking →</div>
         <form onSubmit={submit} className="form-grid">
           <div className="field">
-            <label>Amount</label>
+            <label>Amount (₹)</label>
             <input
-              type="number" step="0.01" min="0" placeholder="0.00" required
+              type="number" step="0.01" min="0" placeholder="0" required
               value={form.amount} onChange={(e) => set('amount', e.target.value)}
             />
           </div>
@@ -105,14 +151,36 @@ export default function AddExpense({ goTo }) {
           <div className="field span-2">
             <label>Note</label>
             <input
-              placeholder="What was it? (e.g. Ramen with Ana)"
+              placeholder="What was it? (e.g. Momos with Ana)"
               value={form.note} onChange={(e) => set('note', e.target.value)}
             />
           </div>
           <div className="field span-2">
+            <label>This was a…</label>
+            <div className="scope-toggle">
+              <button
+                type="button" className={form.scope === 'personal' ? 'on' : ''}
+                onClick={() => set('scope', 'personal')}
+              >
+                🏠 Personal expense
+              </button>
+              <button
+                type="button" className={form.scope === 'work' ? 'on work' : ''}
+                onClick={() => set('scope', 'work')}
+              >
+                💼 Work — reimbursable
+              </button>
+            </div>
+            {form.scope === 'work' && (
+              <div style={{ fontSize: 12.5, color: 'var(--ink-muted)' }}>
+                Tagged for reimbursement — track & export it from the Expenses tab.
+              </div>
+            )}
+          </div>
+          <div className="field span-2">
             <label>Category</label>
             <div className="cat-picker">
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <button
                   key={c.id} type="button"
                   className={form.category === c.id ? 'on' : ''}
@@ -122,7 +190,33 @@ export default function AddExpense({ goTo }) {
                   {c.emoji} {c.label}
                 </button>
               ))}
+              <button
+                type="button" className="new-pill"
+                onClick={() => setNewCat(newCat ? null : { emoji: '', label: '' })}
+              >
+                + New
+              </button>
             </div>
+            <AnimatePresence>
+              {newCat && (
+                <motion.div
+                  className="inline-add"
+                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  <input
+                    style={{ width: 58 }} placeholder="🏷️" maxLength={4} value={newCat.emoji}
+                    onChange={(e) => setNewCat((c) => ({ ...c, emoji: e.target.value }))}
+                  />
+                  <input
+                    placeholder="Category name (e.g. Pets)" value={newCat.label} autoFocus
+                    onChange={(e) => setNewCat((c) => ({ ...c, label: e.target.value }))}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); createCategory() } }}
+                  />
+                  <button type="button" className="btn small" onClick={createCategory}>Add</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <div className="field span-2">
             <label>Paid with</label>
@@ -133,6 +227,38 @@ export default function AddExpense({ goTo }) {
                 </option>
               ))}
             </select>
+            {!newMethod ? (
+              <button
+                type="button" className="linklike" style={{ alignSelf: 'flex-start' }}
+                onClick={() => setNewMethod({ label: '', kind: 'credit', last4: '' })}
+              >
+                + add a new card / payment method
+              </button>
+            ) : (
+              <motion.div
+                className="inline-add"
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+              >
+                <input
+                  placeholder="Name (e.g. HDFC Regalia)" value={newMethod.label} autoFocus
+                  onChange={(e) => setNewMethod((m) => ({ ...m, label: e.target.value }))}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); createMethod() } }}
+                />
+                <select
+                  value={newMethod.kind}
+                  onChange={(e) => setNewMethod((m) => ({ ...m, kind: e.target.value }))}
+                >
+                  {METHOD_KINDS.map((k) => <option key={k.id} value={k.id}>{k.label}</option>)}
+                </select>
+                <input
+                  style={{ width: 90 }} placeholder="last 4" maxLength={4} inputMode="numeric"
+                  value={newMethod.last4}
+                  onChange={(e) => setNewMethod((m) => ({ ...m, last4: e.target.value.replace(/\D/g, '') }))}
+                />
+                <button type="button" className="btn small" onClick={createMethod}>Add</button>
+                <button type="button" className="linklike" onClick={() => setNewMethod(null)}>cancel</button>
+              </motion.div>
+            )}
           </div>
           <div className="span-2" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn" type="submit" disabled={saved}>

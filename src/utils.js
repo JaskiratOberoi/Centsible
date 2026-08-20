@@ -1,4 +1,4 @@
-export const CATEGORIES = [
+export const DEFAULT_CATEGORIES = [
   { id: 'food', label: 'Food & Dining', emoji: '🍜', color: '#d95926' },
   { id: 'groceries', label: 'Groceries', emoji: '🥑', color: '#199e70' },
   { id: 'transport', label: 'Transport', emoji: '🚕', color: '#3987e5' },
@@ -9,14 +9,19 @@ export const CATEGORIES = [
   { id: 'other', label: 'Other', emoji: '✨', color: '#898781' },
 ]
 
-export const categoryById = (id) =>
-  CATEGORIES.find((c) => c.id === id) || CATEGORIES[CATEGORIES.length - 1]
+// palette slots handed to user-created categories, in order
+export const CATEGORY_COLORS = ['#008300', '#1c5cab', '#b0426e', '#7a4bd6', '#3d6b75', '#a8842f']
+
+export const categoryById = (categories, id) =>
+  categories.find((c) => c.id === id) ||
+  categories.find((c) => c.id === 'other') ||
+  categories[categories.length - 1]
 
 export const fmtMoney = (n, opts = {}) =>
-  new Intl.NumberFormat('en-US', {
+  new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: n % 1 === 0 && !opts.cents ? 0 : 2,
+    currency: 'INR',
+    maximumFractionDigits: opts.cents && n % 1 !== 0 ? 2 : 0,
     ...opts,
   }).format(n)
 
@@ -38,7 +43,7 @@ export const prettyDay = (iso) => {
   const yesterday = isoDay(daysAgo(1))
   if (iso === today) return 'Today'
   if (iso === yesterday) return 'Yesterday'
-  return new Date(iso + 'T12:00:00').toLocaleDateString('en-US', {
+  return new Date(iso + 'T12:00:00').toLocaleDateString('en-IN', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -46,7 +51,7 @@ export const prettyDay = (iso) => {
 }
 
 export const shortDay = (iso) =>
-  new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  new Date(iso + 'T12:00:00').toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })
 
 const sum = (arr) => arr.reduce((a, e) => a + e.amount, 0)
 
@@ -76,6 +81,10 @@ export function computeInsights(expenses, monthlyBudget) {
   const todayTotal = sum(expenses.filter((e) => e.date === isoDay()))
   const budgetUsed = monthlyBudget > 0 ? monthTotal / monthlyBudget : 0
 
+  const pendingReimbursement = sum(
+    expenses.filter((e) => e.scope === 'work' && !e.reimbursed)
+  )
+
   // mood drives the mascot: thriving | steady | worried
   let mood = 'steady'
   if (budgetUsed < 0.55 * (dayOfMonth / daysInMonth) + 0.15) mood = 'thriving'
@@ -93,6 +102,7 @@ export function computeInsights(expenses, monthlyBudget) {
     byCategory,
     todayTotal,
     budgetUsed,
+    pendingReimbursement,
     mood,
     daysInMonth,
     dayOfMonth,
@@ -113,3 +123,33 @@ export function dailySeries(expenses, days = 30) {
 }
 
 export const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`
+
+export function exportExpensesCSV(expenses, categories, methods, filename) {
+  const esc = (v) => {
+    const s = String(v ?? '')
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  const header = ['Date', 'Note', 'Category', 'Type', 'Reimbursed', 'Payment method', 'Amount (INR)']
+  const rows = expenses.map((e) => {
+    const cat = categoryById(categories, e.category)
+    const method = methods.find((m) => m.id === e.methodId)
+    return [
+      e.date,
+      e.note || '',
+      cat.label,
+      e.scope === 'work' ? 'Work' : 'Personal',
+      e.scope === 'work' ? (e.reimbursed ? 'Yes' : 'No') : '—',
+      method ? `${method.label}${method.last4 ? ` (••${method.last4})` : ''}` : '',
+      e.amount.toFixed(2),
+    ]
+  })
+  // ﻿ BOM so Excel opens it as UTF-8 (keeps ₹ and emoji intact)
+  const csv = '﻿' + [header, ...rows].map((r) => r.map(esc).join(',')).join('\r\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}

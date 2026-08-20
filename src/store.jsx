@@ -1,29 +1,30 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
-import { isoDay, daysAgo, uid, computeInsights } from './utils.js'
+import { isoDay, daysAgo, uid, computeInsights, DEFAULT_CATEGORIES } from './utils.js'
 
-const KEY = 'centsible-v1'
+const KEY = 'centsible-v2' // v1 was USD-denominated; fresh seed for INR
 
 const DEFAULT_METHODS = [
   { id: 'card-sapphire', label: 'Sapphire Visa', kind: 'credit', last4: '4421', color: '#1c5cab' },
   { id: 'card-everyday', label: 'Everyday Debit', kind: 'debit', last4: '8837', color: '#199e70' },
+  { id: 'upi', label: 'UPI', kind: 'wallet', last4: null, color: '#7a4bd6' },
   { id: 'cash', label: 'Cash', kind: 'cash', last4: null, color: '#c98500' },
 ]
 
 function seedExpenses() {
   // A believable ~45 days of sample life, so charts breathe on first open.
   const picks = [
-    ['food', 'Ramen night', 18.5], ['food', 'Coffee', 5.25], ['food', 'Lunch bowl', 13.9],
-    ['food', 'Tacos with friends', 32.4], ['groceries', 'Weekly groceries', 82.13],
-    ['groceries', 'Farmers market', 24.5], ['transport', 'Uber home', 16.75],
-    ['transport', 'Metro pass', 12.0], ['transport', 'Gas fill-up', 44.2],
-    ['shopping', 'New sneakers', 96.0], ['shopping', 'Desk lamp', 38.99],
-    ['entertainment', 'Movie tickets', 28.0], ['entertainment', 'Concert tee', 35.0],
-    ['entertainment', 'Streaming bundle', 21.99], ['bills', 'Electricity', 74.6],
-    ['bills', 'Internet', 59.99], ['bills', 'Phone plan', 45.0],
-    ['health', 'Pharmacy run', 22.35], ['health', 'Yoga drop-in', 18.0],
-    ['other', 'Birthday gift', 40.0],
+    ['food', 'Swiggy dinner', 380], ['food', 'Filter coffee', 120], ['food', 'Lunch thali', 250],
+    ['food', 'Momos with friends', 480], ['groceries', 'Weekly groceries', 1650],
+    ['groceries', 'Sabzi mandi run', 420], ['transport', 'Uber home', 340],
+    ['transport', 'Metro top-up', 200], ['transport', 'Petrol fill-up', 1100],
+    ['shopping', 'New sneakers', 2600], ['shopping', 'Desk lamp', 900],
+    ['entertainment', 'Movie tickets', 600], ['entertainment', 'Concert tee', 800],
+    ['entertainment', 'OTT bundle', 450], ['bills', 'Electricity', 1600],
+    ['bills', 'Broadband', 999], ['bills', 'Phone plan', 599],
+    ['health', 'Pharmacy run', 350], ['health', 'Yoga drop-in', 400],
+    ['other', 'Birthday gift', 850],
   ]
-  const methods = ['card-sapphire', 'card-everyday', 'cash']
+  const methods = ['card-sapphire', 'card-everyday', 'upi', 'cash']
   const out = []
   let s = 7
   const rand = () => ((s = (s * 16807) % 2147483647) / 2147483647)
@@ -31,13 +32,16 @@ function seedExpenses() {
     const n = rand() < 0.22 ? 0 : 1 + Math.floor(rand() * 2.4)
     for (let k = 0; k < n; k++) {
       const [category, note, base] = picks[Math.floor(rand() * picks.length)]
+      const work = rand() < 0.16
       out.push({
         id: uid() + i + '' + k,
         date: isoDay(daysAgo(i)),
-        amount: +(base * (0.75 + rand() * 0.55)).toFixed(2),
+        amount: Math.round(base * (0.75 + rand() * 0.55)),
         category,
-        note,
+        note: work ? `${note} (client visit)` : note,
         methodId: methods[Math.floor(rand() * methods.length)],
+        scope: work ? 'work' : 'personal',
+        reimbursed: work ? rand() < 0.4 : undefined,
         sample: true,
       })
     }
@@ -48,12 +52,18 @@ function seedExpenses() {
 function initialState() {
   try {
     const raw = localStorage.getItem(KEY)
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const s = JSON.parse(raw)
+      // older saves may predate custom categories
+      if (!s.categories) s.categories = DEFAULT_CATEGORIES
+      return s
+    }
   } catch { /* fall through to fresh state */ }
   return {
     expenses: seedExpenses(),
     methods: DEFAULT_METHODS,
-    monthlyBudget: 2200,
+    categories: DEFAULT_CATEGORIES,
+    monthlyBudget: 50000,
     seeded: true,
   }
 }
@@ -64,12 +74,21 @@ function reducer(state, action) {
       return { ...state, expenses: [action.expense, ...state.expenses] }
     case 'delete-expense':
       return { ...state, expenses: state.expenses.filter((e) => e.id !== action.id) }
+    case 'toggle-reimbursed':
+      return {
+        ...state,
+        expenses: state.expenses.map((e) =>
+          e.id === action.id ? { ...e, reimbursed: !e.reimbursed } : e
+        ),
+      }
     case 'clear-samples':
       return { ...state, seeded: false, expenses: state.expenses.filter((e) => !e.sample) }
     case 'add-method':
       return { ...state, methods: [...state.methods, action.method] }
     case 'delete-method':
       return { ...state, methods: state.methods.filter((m) => m.id !== action.id) }
+    case 'add-category':
+      return { ...state, categories: [...state.categories, action.category] }
     case 'set-budget':
       return { ...state, monthlyBudget: action.value }
     default:

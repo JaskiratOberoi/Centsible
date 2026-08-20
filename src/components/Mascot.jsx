@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { fmtMoney, categoryById } from '../utils.js'
+import { useStore } from '../store.jsx'
 
 // Penny — a lively little coin who reacts to how the month is going.
 const MOODS = {
@@ -91,6 +92,7 @@ export function Penny({ mood = 'steady', size = 150 }) {
 }
 
 export function MascotStage({ insights, budget }) {
+  const { categories } = useStore()
   const line = useMemo(() => {
     const { mood, projected, weekDelta, topCategoryId, monthTotal } = insights
     const remaining = budget - monthTotal
@@ -104,14 +106,14 @@ export function MascotStage({ insights, budget }) {
       )
     if (weekDelta != null && Math.abs(weekDelta) > 0.12)
       return weekDelta > 0 ? (
-        <>Spending is up <b>{Math.round(weekDelta * 100)}%</b> vs last week — mostly <b>{categoryById(topCategoryId).label.toLowerCase()}</b>. Keeping an eye on it 👀</>
+        <>Spending is up <b>{Math.round(weekDelta * 100)}%</b> vs last week — mostly <b>{categoryById(categories, topCategoryId).label.toLowerCase()}</b>. Keeping an eye on it 👀</>
       ) : (
         <>Nice — you spent <b>{Math.round(-weekDelta * 100)}%</b> less than last week. I love this for us.</>
       )
     return (
       <>Steady as she goes — <b>{fmtMoney(remaining > 0 ? remaining : 0)}</b> left for the month. I'll holler if anything looks odd.</>
     )
-  }, [insights, budget])
+  }, [insights, budget, categories])
 
   return (
     <div className="mascot-stage">

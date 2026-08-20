@@ -57,8 +57,8 @@ const fadeUp = {
 }
 
 export default function Dashboard({ goTo }) {
-  const { expenses, insights, monthlyBudget, seeded, dispatch } = useStore()
-  const topCat = insights.topCategoryId ? categoryById(insights.topCategoryId) : null
+  const { expenses, insights, monthlyBudget, seeded, categories, dispatch } = useStore()
+  const topCat = insights.topCategoryId ? categoryById(categories, insights.topCategoryId) : null
   const monthName = new Date().toLocaleDateString('en-US', { month: 'long' })
 
   return (

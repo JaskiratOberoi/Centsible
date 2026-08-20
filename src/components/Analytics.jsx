@@ -21,7 +21,7 @@ function VizTooltip({ active, payload, label, money = true }) {
 const fadeUp = { initial: { opacity: 0, y: 18 }, animate: { opacity: 1, y: 0 } }
 
 export default function Analytics() {
-  const { expenses, insights, monthlyBudget, methods } = useStore()
+  const { expenses, insights, monthlyBudget, methods, categories } = useStore()
 
   const trend = useMemo(() => dailySeries(expenses, 30), [expenses])
 
@@ -31,9 +31,9 @@ export default function Analytics() {
     for (const e of expenses.filter((x) => x.date.startsWith(monthKey)))
       map[e.category] = (map[e.category] || 0) + e.amount
     return Object.entries(map)
-      .map(([id, value]) => ({ id, value: +value.toFixed(2), ...categoryById(id) }))
+      .map(([id, value]) => ({ ...categoryById(categories, id), id, value: +value.toFixed(2) }))
       .sort((a, b) => b.value - a.value)
-  }, [expenses])
+  }, [expenses, categories])
 
   const byMethod = useMemo(() => {
     const since = isoDay(daysAgo(29))
@@ -45,7 +45,7 @@ export default function Analytics() {
       .sort((a, b) => b.value - a.value)
   }, [expenses, methods])
 
-  const topCat = insights.topCategoryId ? categoryById(insights.topCategoryId) : null
+  const topCat = insights.topCategoryId ? categoryById(categories, insights.topCategoryId) : null
   const catTotal = catData.reduce((a, c) => a + c.value, 0)
 
   const smartInsights = useMemo(() => {

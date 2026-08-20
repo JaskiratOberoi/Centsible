@@ -41,7 +41,7 @@ export function TiltCard({ children, className, style }) {
 }
 
 export function TransactionList({ expenses, limit }) {
-  const { methods, dispatch } = useStore()
+  const { methods, categories, dispatch } = useStore()
   const sorted = [...expenses].sort((a, b) => b.date.localeCompare(a.date))
   const shown = limit ? sorted.slice(0, limit) : sorted
   const groups = []
@@ -60,7 +60,7 @@ export function TransactionList({ expenses, limit }) {
             <span>{fmtMoney(g.items.reduce((a, e) => a + e.amount, 0))}</span>
           </div>
           {g.items.map((e, i) => {
-            const cat = categoryById(e.category)
+            const cat = categoryById(categories, e.category)
             const method = methods.find((m) => m.id === e.methodId)
             return (
               <motion.div
@@ -79,6 +79,15 @@ export function TransactionList({ expenses, limit }) {
                     {method ? ` · ${method.label}${method.last4 ? ` ••${method.last4}` : ''}` : ''}
                   </div>
                 </div>
+                {e.scope === 'work' && (
+                  <button
+                    className={`scope-badge${e.reimbursed ? ' done' : ''}`}
+                    title={e.reimbursed ? 'Reimbursed — click to undo' : 'Awaiting reimbursement — click when paid back'}
+                    onClick={() => dispatch({ type: 'toggle-reimbursed', id: e.id })}
+                  >
+                    💼 {e.reimbursed ? 'reimbursed ✓' : 'work'}
+                  </button>
+                )}
                 <div className="txn-amount">{fmtMoney(e.amount, { cents: true })}</div>
                 <button
                   className="txn-del"

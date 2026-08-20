@@ -9,7 +9,7 @@ const KINDS = [
   { id: 'credit', label: 'Credit card' },
   { id: 'debit', label: 'Debit card' },
   { id: 'cash', label: 'Cash' },
-  { id: 'wallet', label: 'Digital wallet' },
+  { id: 'wallet', label: 'UPI / wallet' },
 ]
 
 export default function Wallet() {
@@ -137,9 +137,9 @@ export default function Wallet() {
             }}
           >
             <div className="field">
-              <label>Budget (USD)</label>
+              <label>Budget (₹)</label>
               <input
-                type="number" min="1" step="50" value={budgetDraft}
+                type="number" min="1" step="500" value={budgetDraft}
                 onChange={(e) => setBudgetDraft(e.target.value)}
               />
             </div>

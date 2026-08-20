@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { isoDay, daysAgo, uid, computeInsights, DEFAULT_CATEGORIES } from './utils.js'
+import { supabase } from './auth.jsx'
 
 const LEGACY_KEY = 'centsible-v2' // pre-accounts store; adopted by the first user
 const keyFor = (userId) => `centsible-v2:${userId}`
@@ -73,6 +74,8 @@ function initialState(key) {
 
 function reducer(state, action) {
   switch (action.type) {
+    case 'hydrate':
+      return { ...action.state, categories: action.state.categories || DEFAULT_CATEGORIES }
     case 'add-expense':
       return { ...state, expenses: [action.expense, ...state.expenses] }
     case 'delete-expense':
@@ -104,9 +107,40 @@ const StoreCtx = createContext(null)
 export function StoreProvider({ userId, children }) {
   // remounted per user (key={userId} at the call site), so lazy init is safe
   const [state, dispatch] = useReducer(reducer, keyFor(userId), initialState)
+  const [syncState, setSyncState] = useState(supabase ? 'pulling' : 'local')
+  const hydrated = useRef(!supabase) // block pushes until the cloud copy is pulled
+  const pushTimer = useRef(null)
+
+  // initial pull: cloud copy wins; if none exists, adopt this device's state
+  useEffect(() => {
+    if (!supabase) return
+    let cancelled = false
+    supabase
+      .from('user_state')
+      .select('state')
+      .eq('user_id', userId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (!error && data?.state) dispatch({ type: 'hydrate', state: data.state })
+        hydrated.current = true
+        setSyncState(error ? 'error' : 'synced')
+      })
+    return () => { cancelled = true }
+  }, [userId])
 
   useEffect(() => {
     localStorage.setItem(keyFor(userId), JSON.stringify(state))
+    if (!supabase || !hydrated.current) return
+    setSyncState('pushing')
+    clearTimeout(pushTimer.current)
+    pushTimer.current = setTimeout(async () => {
+      const { error } = await supabase
+        .from('user_state')
+        .upsert({ user_id: userId, state, updated_at: new Date().toISOString() })
+      setSyncState(error ? 'error' : 'synced')
+    }, 800)
+    return () => clearTimeout(pushTimer.current)
   }, [state, userId])
 
   const insights = useMemo(
@@ -114,7 +148,7 @@ export function StoreProvider({ userId, children }) {
     [state.expenses, state.monthlyBudget]
   )
 
-  const value = useMemo(() => ({ ...state, insights, dispatch }), [state, insights])
+  const value = useMemo(() => ({ ...state, insights, syncState, dispatch }), [state, insights, syncState])
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>
 }
 

@@ -610,6 +610,20 @@ h1.display em { font-style: italic; color: var(--accent); }
   padding: 11px 14px;
   font-size: 13.5px;
 }
+.auth-notice {
+  background: rgba(12, 163, 12, 0.1);
+  border: 1px solid rgba(12, 163, 12, 0.3);
+  color: #7ed87e;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+}
+.sync-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex: none;
+  transition: background 0.3s;
+}
 .auth-fine {
   color: var(--ink-muted);
   font-size: 12px;

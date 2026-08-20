@@ -25,6 +25,24 @@ who reacts to how your month is going.
 All data persists in `localStorage`. The app seeds ~45 days of sample data on first run so the
 charts have something to say — clear it from the Overview screen.
 
+## Accounts & cloud sync
+
+The app has a login/register gate. Out of the box it runs **local-only** (accounts
+and data stay in the browser). To make accounts work **across devices**:
+
+1. Create a free project at [supabase.com/dashboard](https://supabase.com/dashboard)
+2. Open its **SQL Editor**, paste and run [`supabase/schema.sql`](supabase/schema.sql)
+3. Copy **Project Settings → API → Project URL & anon public key** into
+   [`src/supabase-config.js`](src/supabase-config.js)
+4. Optional but recommended for instant signups: **Authentication → Providers →
+   Email → disable "Confirm email"** (otherwise users must click a confirmation
+   link before their first login)
+
+The anon key is public by design — Row Level Security (in the schema) is what
+protects each user's data. App state syncs to a single JSON row per user
+(last-write-wins), pulled on login and pushed ~1s after each change; the sync
+dot next to your avatar shows the status.
+
 ## Run it
 
 ```bash

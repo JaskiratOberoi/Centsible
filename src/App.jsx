@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { StoreProvider } from './store.jsx'
+import { StoreProvider, useStore } from './store.jsx'
 import { AuthProvider, useAuth } from './auth.jsx'
 import AuthScreen from './components/AuthScreen.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -40,6 +40,18 @@ function Aurora() {
       />
     </div>
   )
+}
+
+function SyncDot() {
+  const { syncState } = useStore()
+  if (syncState === 'local') return null
+  const looks = {
+    pulling: { color: 'var(--ink-muted)', label: 'Syncing from cloud…' },
+    pushing: { color: 'var(--accent)', label: 'Saving to cloud…' },
+    synced: { color: 'var(--good)', label: 'Synced across your devices' },
+    error: { color: 'var(--bad)', label: 'Sync issue — changes saved on this device' },
+  }[syncState]
+  return <span className="sync-dot" style={{ background: looks.color }} title={looks.label} />
 }
 
 function Shell() {
@@ -89,6 +101,7 @@ function Shell() {
           <div className="user-chip">
             <span className="user-avatar" title={user.email}>{firstName[0]?.toUpperCase()}</span>
             <span className="user-name">{firstName}</span>
+            <SyncDot />
             <button className="user-logout" onClick={logout} title="Sign out">⏻</button>
           </div>
         </header>

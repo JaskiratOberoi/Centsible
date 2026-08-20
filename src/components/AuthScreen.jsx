@@ -4,10 +4,11 @@ import { useAuth } from '../auth.jsx'
 import { Penny } from './Mascot.jsx'
 
 export default function AuthScreen() {
-  const { login, register } = useAuth()
+  const { login, register, cloud } = useAuth()
   const [mode, setMode] = useState('login')
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [error, setError] = useState(null)
+  const [notice, setNotice] = useState(null)
   const [busy, setBusy] = useState(false)
   const [showPass, setShowPass] = useState(false)
 
@@ -16,10 +17,18 @@ export default function AuthScreen() {
   async function submit(e) {
     e.preventDefault()
     setError(null)
+    setNotice(null)
     setBusy(true)
     try {
-      if (mode === 'login') await login(form.email, form.password)
-      else await register(form.name, form.email, form.password)
+      if (mode === 'login') {
+        await login(form.email, form.password)
+      } else {
+        const res = await register(form.name, form.email, form.password)
+        if (res?.needsConfirmation) {
+          setMode('login')
+          setNotice('Almost there — confirm your email from your inbox, then log in here.')
+        }
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -94,6 +103,17 @@ export default function AuthScreen() {
           </div>
 
           <AnimatePresence>
+            {notice && (
+              <motion.div
+                className="auth-notice"
+                key="notice"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                📮 {notice}
+              </motion.div>
+            )}
             {error && (
               <motion.div
                 className="auth-error"
@@ -114,7 +134,9 @@ export default function AuthScreen() {
         </form>
 
         <p className="auth-fine">
-          Your account and data live on this device only — nothing is sent to a server.
+          {cloud
+            ? 'Your account syncs securely across devices — log in anywhere to pick up where you left off.'
+            : 'Your account and data live on this device only — nothing is sent to a server.'}
         </p>
       </motion.div>
     </div>

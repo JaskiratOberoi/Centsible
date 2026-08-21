@@ -31,6 +31,10 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,webmanifest}'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        // take over immediately so a deploy reaches phones on the next
+        // open instead of the one after
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             // Google Fonts stylesheets + font files

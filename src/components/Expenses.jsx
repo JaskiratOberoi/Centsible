@@ -59,7 +59,7 @@ export default function Expenses() {
             <div className="section-sub">Filter by type, category & period — then take it to Excel</div>
           </div>
           <button className="btn small" onClick={doExport} disabled={!filtered.length}>
-            ⬇︎ Export CSV ({filtered.length})
+            ↓ Export CSV ({filtered.length})
           </button>
         </div>
 

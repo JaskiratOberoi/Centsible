@@ -43,6 +43,41 @@ function Aurora() {
   )
 }
 
+function useTheme() {
+  const [theme, setTheme] = useState(() => localStorage.getItem('centsible-theme') || 'dark')
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('centsible-theme', theme)
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', theme === 'dark' ? '#0d0d0f' : '#f4f1ea')
+  }, [theme])
+  return [theme, setTheme]
+}
+
+function ThemeToggle({ theme, setTheme, floating }) {
+  const next = theme === 'dark' ? 'light' : 'dark'
+  return (
+    <button
+      className={`theme-toggle${floating ? ' floating' : ''}`}
+      onClick={() => setTheme(next)}
+      title={`Switch to ${next} mode`}
+      aria-label={`Switch to ${next} mode`}
+    >
+      {theme === 'dark' ? (
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <circle cx="12" cy="12" r="4.5" />
+          <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
 function SyncDot() {
   const { syncState } = useStore()
   if (syncState === 'local') return null
@@ -55,7 +90,7 @@ function SyncDot() {
   return <span className="sync-dot" style={{ background: looks.color }} title={looks.label} />
 }
 
-function Shell() {
+function Shell({ theme, setTheme }) {
   const { user, ready, logout } = useAuth()
   const [tab, setTab] = useState(() => {
     const h = window.location.hash.slice(1)
@@ -71,6 +106,7 @@ function Shell() {
   if (!user) {
     return (
       <motion.div key="auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <ThemeToggle theme={theme} setTheme={setTheme} floating />
         <AuthScreen />
       </motion.div>
     )
@@ -103,7 +139,13 @@ function Shell() {
             <span className="user-avatar" title={user.email}>{firstName[0]?.toUpperCase()}</span>
             <span className="user-name">{firstName}</span>
             <SyncDot />
-            <button className="user-logout" onClick={logout} title="Sign out">⏻</button>
+            <ThemeToggle theme={theme} setTheme={setTheme} />
+            <button className="user-logout" onClick={logout} title="Sign out" aria-label="Sign out">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M12 3v8" />
+                <path d="M6.8 6.6a7.2 7.2 0 1 0 10.4 0" />
+              </svg>
+            </button>
           </div>
         </header>
 
@@ -137,10 +179,11 @@ function Shell() {
 }
 
 export default function App() {
+  const [theme, setTheme] = useTheme()
   return (
     <AuthProvider>
       <Aurora />
-      <Shell />
+      <Shell theme={theme} setTheme={setTheme} />
       <InstallPrompt />
     </AuthProvider>
   )

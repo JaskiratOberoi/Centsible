@@ -152,6 +152,7 @@ input, select, textarea { font-family: inherit; }
 }
 .nav button {
   position: relative;
+  isolation: isolate; /* keep the pill's stacking inside the button */
   border: 0;
   background: transparent;
   color: var(--ink-2);
@@ -166,9 +167,10 @@ input, select, textarea { font-family: inherit; }
 .nav .nav-pill {
   position: absolute;
   inset: 0;
+  display: block;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--accent-2), var(--accent));
-  z-index: -1;
+  z-index: 0;
 }
 .nav button > span { position: relative; z-index: 1; }
 

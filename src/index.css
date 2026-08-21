@@ -24,6 +24,8 @@
 
 html, body { height: 100%; }
 
+html, body { overflow-x: clip; }
+
 body {
   background: var(--bg);
   color: var(--ink);
@@ -31,8 +33,14 @@ body {
   font-weight: 400;
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
+
+/* grid/flex items default to min-width:auto, which lets wide content
+   (charts, inputs) force tracks past the viewport — the root cause of
+   horizontal scroll on phones */
+.grid > *, .form-grid > *, .grid.two > * { min-width: 0; }
+.field input, .field select { width: 100%; min-width: 0; }
+img, canvas, video { max-width: 100%; }
 
 #root { min-height: 100%; }
 
@@ -402,6 +410,7 @@ h1.display em { font-style: italic; color: var(--accent); }
 
 /* ---------- charts ---------- */
 
+.chart-card { overflow: hidden; }
 .chart-card .recharts-surface { overflow: visible; }
 .viz-tooltip {
   background: var(--surface-2);
@@ -699,6 +708,60 @@ h1.display em { font-style: italic; color: var(--accent); }
 }
 .bottomnav .bn-icon { font-size: 19px; line-height: 1; }
 .bottomnav .bn-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; }
+
+/* ---------- install sheet ---------- */
+
+.install-sheet {
+  position: fixed;
+  left: 12px; right: 12px;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(30, 30, 38, 0.92);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(232, 193, 104, 0.35);
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.55), 0 0 30px rgba(232, 193, 104, 0.08);
+  max-width: 440px;
+  margin: 0 auto;
+}
+.install-sheet .is-coin {
+  width: 40px; height: 40px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 12px;
+  background: radial-gradient(circle at 30% 25%, var(--accent-2), var(--accent) 60%, #a8842f);
+  color: var(--accent-ink);
+  font-family: var(--font-display);
+  font-size: 20px;
+  box-shadow: 0 4px 14px rgba(232, 193, 104, 0.35);
+}
+.install-sheet .is-copy {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
+  font-size: 13px; line-height: 1.4;
+}
+.install-sheet .is-copy b { font-size: 14px; }
+.install-sheet .is-copy span { color: var(--ink-muted); }
+.install-sheet .is-share {
+  display: inline-grid; place-items: center;
+  width: 18px; height: 18px;
+  border: 1px solid var(--ink-muted);
+  border-radius: 5px;
+  font-size: 11px;
+  vertical-align: -3px;
+}
+.install-sheet .is-close {
+  background: none; border: 0;
+  color: var(--ink-muted);
+  font-size: 14px;
+  padding: 6px;
+  flex: none;
+}
+.install-sheet .is-close:hover { color: var(--ink); }
 
 /* ---------- mobile responsiveness ---------- */
 

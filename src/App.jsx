@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { StoreProvider, useStore } from './store.jsx'
 import { AuthProvider, useAuth } from './auth.jsx'
 import AuthScreen from './components/AuthScreen.jsx'
+import InstallPrompt from './components/InstallPrompt.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import AddExpense from './components/AddExpense.jsx'
 import Analytics from './components/Analytics.jsx'
@@ -140,6 +141,7 @@ export default function App() {
     <AuthProvider>
       <Aurora />
       <Shell />
+      <InstallPrompt />
     </AuthProvider>
   )
 }

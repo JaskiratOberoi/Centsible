@@ -5,6 +5,38 @@ import { fmtMoney, isoDay, daysAgo, uid } from '../utils.js'
 import { TiltCard } from './bits.jsx'
 
 const CARD_COLORS = ['#1c5cab', '#199e70', '#c98500', '#7a4bd6', '#b0426e', '#3d6b75']
+
+function Chip({ id }) {
+  return (
+    <svg className="pc-chip" viewBox="0 0 44 34" aria-hidden>
+      <defs>
+        <linearGradient id={`chip-${id}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f2e3b3" />
+          <stop offset="45%" stopColor="#d9b969" />
+          <stop offset="100%" stopColor="#a8842f" />
+        </linearGradient>
+      </defs>
+      <rect x="1" y="1" width="42" height="32" rx="7" fill={`url(#chip-${id})`} stroke="rgba(60,40,0,0.35)" />
+      <path
+        d="M1 12h12M1 22h12M31 12h12M31 22h12M22 1v8M22 25v8M13 12a9 9 0 0 1 18 0v10a9 9 0 0 1-18 0z"
+        fill="none" stroke="rgba(60,40,0,0.4)" strokeWidth="1.4"
+      />
+    </svg>
+  )
+}
+
+const Contactless = () => (
+  <svg className="pc-glyph" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+    <path d="M6.5 8.6a6.5 6.5 0 0 1 0 6.8" />
+    <path d="M10 6.5a10 10 0 0 1 0 11" />
+    <path d="M13.5 4.4a13.8 13.8 0 0 1 0 15.2" />
+  </svg>
+)
+
+const RupeeMark = () => (
+  <span className="pc-glyph pc-rupee" aria-hidden>₹</span>
+)
+
 const KINDS = [
   { id: 'credit', label: 'Credit card' },
   { id: 'debit', label: 'Debit card' },
@@ -54,20 +86,21 @@ export default function Wallet() {
               animate={{ opacity: 1, y: 0, rotate: 0 }}
               transition={{ delay: i * 0.09, type: 'spring', stiffness: 160, damping: 20 }}
             >
-              <TiltCard
-                className="pay-card"
-                style={{ background: `linear-gradient(135deg, ${m.color}, ${m.color}88), var(--surface-2)` }}
-              >
-                <div className="shine" />
-                <div>
-                  <div className="pc-kind">{m.kind}</div>
-                  <div className="pc-label">{m.label}</div>
+              <TiltCard className={`pay-card kind-${m.kind}`} style={{ '--cc': m.color }}>
+                <div className="pc-pattern" aria-hidden />
+                <div className="shine" aria-hidden />
+                <div className="pc-top">
+                  <span className="pc-kind">{m.kind}</span>
+                  {m.kind === 'credit' || m.kind === 'debit' ? <Contactless /> : <RupeeMark />}
                 </div>
+                {(m.kind === 'credit' || m.kind === 'debit') && <Chip id={m.id} />}
+                <div className="pc-label">{m.label}</div>
                 <div className="pc-bottom">
                   <div>
                     <div className="pc-number">{m.last4 ? `••••  ••••  ••••  ${m.last4}` : '— no number —'}</div>
                     <div className="pc-spent">{fmtMoney(spentByMethod[m.id] || 0)} · last 30 days</div>
                   </div>
+                  <span className="pc-net" aria-hidden><i /><i /></span>
                   <button className="pc-del" onClick={() => dispatch({ type: 'delete-method', id: m.id })}>
                     remove
                   </button>

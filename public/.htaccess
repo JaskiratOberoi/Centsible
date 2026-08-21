@@ -1,0 +1,7 @@
+# Entry points must always revalidate so deploys reach browsers
+# immediately; hashed assets in /assets stay long-cached by the host.
+<IfModule mod_headers.c>
+  <FilesMatch "^(sw\.js|registerSW\.js|workbox-.*\.js|manifest\.webmanifest|index\.html)$">
+    Header set Cache-Control "no-cache, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
